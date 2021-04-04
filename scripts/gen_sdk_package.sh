@@ -1,10 +1,6 @@
-#!/usr/bin/env bash
-#
-# Package the macOS SDKs into a tar file.
-# This script requires the  Xcode Command Line Tools to be installed in order to work.
-#
-
+#!/bin/bash
 set -e
+
 export LC_ALL=C
 
 if command -v gnutar &>/dev/null; then
@@ -42,26 +38,41 @@ function compress() {
   output="$1"
   shift
   case "${SDK_COMPRESSOR}" in
-  "zip") "${SDK_COMPRESSOR}" -q -5 -r - "$@" >"${output}" ;;
-  *) "${TAR}" cf - "$@" | "${SDK_COMPRESSOR}" -5 - >"${output}" ;;
+  "zip") "${SDK_COMPRESSOR}" -q -9 -r - "$@" >"${output}" ;;
+  *) "${TAR}" cf - "$@" | "${SDK_COMPRESSOR}" -9 - >"${output}" ;;
   esac
 }
 
 function rreadlink() {
-  if [ ! -h "$1" ]; then
-    echo "$1"
-  else
-    local link
-    link="$(expr "$(command ls -ld -- "$1")" : '.*-> \(.*\)$')"
-    cd "$(dirname "$1")"
-    rreadlink "${link}" | sed "s|^\([^/].*\)\$|$(dirname "$1")/\1|"
-  fi
+  local target_file
+  target_file=$1
+
+  cd "$(dirname "${target_file}")"
+  target_file=$(basename "${target_file}")
+
+  while [ -L "${target_file}" ]; do
+    target_file=$(readlink "${target_file}")
+    cd "$(dirname "${target_file}")"
+    target_file=$(basename "${target_file}")
+  done
+
+  echo "$(pwd -P)/${target_file}"
 }
 
 WORK_DIR=$(pwd)
-SDK_DIR="/Library/Developer/CommandLineTools/SDKs"
-LIBCXX_DIR="/Library/Developer/CommandLineTools/usr/include/c++/v1"
-MAN_DIR="/Library/Developer/CommandLineTools/usr/share/man"
+
+if [ -z "${COMMAND_LINE_TOOLS}" ]; then
+  COMMAND_LINE_TOOLS="/Library/Developer/CommandLineTools"
+fi
+
+SDK_DIR="${COMMAND_LINE_TOOLS}/SDKs"
+LIBCXX_DIR="${COMMAND_LINE_TOOLS}/usr/include/c++/v1"
+MAN_DIR="${COMMAND_LINE_TOOLS}/usr/share/man"
+
+if [ ! -d "${SDK_DIR}" ]; then
+  echo "SDKs directory does not exist: ${SDK_DIR}"
+  exit 1
+fi
 
 pushd "${SDK_DIR}" &>/dev/null
 
@@ -99,9 +110,7 @@ for SDK in "${SDKS[@]}"; do
     cp -rf "${MAN_DIR}/"* "${TMP}/${SDK}/usr/share/man"
   fi
 
-  pushd "${TMP}" &>/dev/null
-  compress "${WORK_DIR}/${SDK}${SDK_EXT}" *
-  popd &>/dev/null
+  (cd "${TMP}" && compress "${WORK_DIR}/${SDK}${SDK_EXT}" *)
 
   rm -rf "${TMP}"
 done
