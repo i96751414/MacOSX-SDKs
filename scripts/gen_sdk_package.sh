@@ -88,7 +88,7 @@ fi
 
 for SDK in "${SDKS[@]}"; do
   SDK_NAME=$(sed -E "s/(.sdk|.pkg)//g" <<<"${SDK}")
-  echo "Packaging ${SDK_NAME} SDK (this may take several minutes) ..."
+  echo "Packaging ${SDK_NAME} SDK (this may take several minutes)"
 
   if [[ "${SDK}" == *.pkg ]]; then
     cp "${SDK}" "${WORK_DIR}"
@@ -99,13 +99,13 @@ for SDK in "${SDKS[@]}"; do
   cp -r "$(rreadlink "${SDK}")" "${TMP}/${SDK}" &>/dev/null || true
 
   if [ -d "${LIBCXX_DIR}" ]; then
-    echo "Adding ${LIBCXX_DIR} to ${SDK_NAME}"
+    echo "Adding c++ directory to ${SDK_NAME}"
     mkdir -p "${TMP}/${SDK}/usr/include/c++"
     cp -rf ${LIBCXX_DIR} "${TMP}/${SDK}/usr/include/c++"
   fi
 
   if [ -d "${MAN_DIR}" ]; then
-    echo "Adding ${MAN_DIR} to ${SDK_NAME}"
+    echo "Adding man directory to ${SDK_NAME}"
     mkdir -p "${TMP}/${SDK}/usr/share/man"
     cp -rf "${MAN_DIR}/"* "${TMP}/${SDK}/usr/share/man"
   fi
