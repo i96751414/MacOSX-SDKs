@@ -45,7 +45,7 @@ function compress() {
 
 function rreadlink() {
   local target_file
-  target_file=$1
+  target_file="$1"
 
   cd "$(dirname "${target_file}")"
   target_file=$(basename "${target_file}")
@@ -59,7 +59,7 @@ function rreadlink() {
   echo "$(pwd -P)/${target_file}"
 }
 
-WORK_DIR=$(pwd)
+WORK_DIR="$(pwd)"
 
 if [ -z "${COMMAND_LINE_TOOLS}" ]; then
   COMMAND_LINE_TOOLS="/Library/Developer/CommandLineTools"
@@ -88,24 +88,24 @@ fi
 
 for SDK in "${SDKS[@]}"; do
   SDK_NAME=$(sed -E "s/(.sdk|.pkg)//g" <<<"${SDK}")
-  echo "Packaging ${SDK_NAME} SDK (this may take several minutes)"
+  echo "- Packaging ${SDK_NAME} SDK (this may take several minutes)"
 
   if [[ "${SDK}" == *.pkg ]]; then
     cp "${SDK}" "${WORK_DIR}"
     continue
   fi
 
-  TMP=$(mktemp -d /tmp/XXXXXXXXXXX)
+  TMP="$(mktemp -d /tmp/XXXXXXXXXXX)"
   cp -r "$(rreadlink "${SDK}")" "${TMP}/${SDK}" &>/dev/null || true
 
   if [ -d "${LIBCXX_DIR}" ]; then
-    echo "Adding c++ directory to ${SDK_NAME}"
+    echo "- Adding c++ directory to ${SDK_NAME}"
     mkdir -p "${TMP}/${SDK}/usr/include/c++"
-    cp -rf ${LIBCXX_DIR} "${TMP}/${SDK}/usr/include/c++"
+    cp -rf "${LIBCXX_DIR}" "${TMP}/${SDK}/usr/include/c++"
   fi
 
   if [ -d "${MAN_DIR}" ]; then
-    echo "Adding man directory to ${SDK_NAME}"
+    echo "- Adding man directory to ${SDK_NAME}"
     mkdir -p "${TMP}/${SDK}/usr/share/man"
     cp -rf "${MAN_DIR}/"* "${TMP}/${SDK}/usr/share/man"
   fi

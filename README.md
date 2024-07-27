@@ -9,7 +9,7 @@ from https://developer.apple.com/download/more/.
    install the Command line tools.
 2. Run `./scripts/gen_sdk_package.sh`
 
-## Generating a SDK package from a .dmg file
+## Generating an SDK package from a .dmg file
 
 1. Create the docker image: `docker build -t i96751414/mac-sdk-packager:latest .`
-2. Run the container with the volume containing the `.dmg` file: `docker run --rm -u "$(id -u):$(id -g)" -v "<volume-path>:/sdk" i96751414/mac-sdk-packager:latest`
+2. Run the container with the volume containing the `.dmg` file: `docker run --rm -it -u "$(id -u):$(id -g)" -v "$(pwd):/sdk" i96751414/mac-sdk-packager:latest`

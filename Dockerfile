@@ -1,6 +1,6 @@
-FROM debian:stretch
+FROM debian:buster
 
-ARG XAR_VERSION=1.6.1
+ARG XAR_REV="xar-1.6.1"
 ARG PBZX_REV=master
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /tmp
 
-RUN curl -ksSL "https://github.com/downloads/mackyle/xar/xar-${XAR_VERSION}.tar.gz" | tar --strip=1 -xz \
+RUN curl -ksSL "https://github.com/mackyle/xar/archive/${XAR_REV}.tar.gz" | tar --strip=1 -xz \
+    && cd xar \
     && sed -i 's|OpenSSL_add_all_ciphers|OPENSSL_init_crypto|' configure.ac \
     && ./autogen.sh \
     && ./configure \
@@ -32,11 +33,11 @@ RUN curl -ksSL "https://github.com/NiklasRosenstein/pbzx/archive/${PBZX_REV}.tar
     && mv pbzx /usr/bin/ \
     && rm -rf "$(pwd)/"*
 
-ENV PATH /scripts:${PATH}
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
+ENV PATH="/scripts:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 
 COPY scripts /scripts
 
 VOLUME /sdk
 WORKDIR /sdk
-CMD gen_sdk_package_from_dmg.sh /sdk/*.dmg
+ENTRYPOINT ["gen_sdk_package_from_dmg.sh"]
